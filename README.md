@@ -13,7 +13,7 @@ At the moment it works only with **CHROME BROWSER!**
 ***
 ## Installation
 
-![alt text](https://i.imgur.com/NcqGxAk.png)
+![alt text](https://i.imgur.com/GGd8EiT.png)
 ***
 ## Usage
 Open skins.txt file ,and put skin URLs into this file like below. Remember to put every URL to new line.
