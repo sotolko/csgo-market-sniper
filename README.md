@@ -14,6 +14,10 @@ At the moment it works only with **CHROME BROWSER!**
 ## Installation
 
 ![alt text](https://i.imgur.com/GGd8EiT.png)
+
+```
+pip install selenium & pip install requests & pip install chromedriver-autoinstaller
+```
 ***
 ## Usage
 Open skins.txt file ,and put skin URLs into this file like below. Remember to put every URL to new line.
@@ -23,6 +27,9 @@ Then, start the program
 
 ![alt text](https://i.imgur.com/NXjOBnz.png)
 
+```
+python csgo-market-sniper.py
+```
 Chrome window with steam login page will open. **LOGIN INTO STEAM FIRST!**
 ***
 ## Example
