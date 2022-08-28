@@ -1,4 +1,6 @@
 import time
+import logging
+import sys
 import requests
 import chromedriver_autoinstaller
 
@@ -19,10 +21,24 @@ urls = []
 priceTextNum = []
 
 def check_user_balance():
+    """Function that is checking user balance"""
+
     print("Checking user balance...")
     userBalance = driver.find_element("id","header_wallet_balance")
     userBalNum = (int(''.join(c for c in userBalance.text if c.isdigit()))/100)
     return userBalNum
+
+def buyLog(itemName,itemFloat,itemPattern,itemPrice):
+    """Function that will save informaiton about purchase to logfile"""
+
+    logger = logging.getLogger('BUYLOGGER')
+    logger.setLevel(logging.INFO)
+    fileHandler = logging.FileHandler("purchaseHistory.log",mode='a')
+    fileHandler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s%(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S%p %Z')
+    fileHandler.setFormatter(formatter)
+    logger.addHandler(fileHandler)
+    logger.info("Item name: {} , Float: {} , Pattern: {} , Price: {}".format(itemName,itemFloat,itemPattern,itemPrice))  
 
 #Login page load
 driver.get("https://steamcommunity.com/login/home/?goto=market%2Flistings%2F730")
@@ -32,7 +48,7 @@ print("Login into STEAM first!")
 speed = float(input("How much wait time in seconds after each search (enter for default) : ") or "2")
 
 #Reading URLs
-with open('skins.txt', 'r') as findvalues:
+with open('skins.txt', 'r', encoding="utf-8") as findvalues:
     for line in findvalues:
         line = line.rstrip()
         if line.startswith('https://steamcommunity.com/market/listings/730/'):
@@ -83,6 +99,8 @@ while True:
                 userBalNum = check_user_balance()
             except:
                 print("Cant get user balance. Are you logged in?")
+                driver.quit()
+                sys.exit()
 
             #Check if user have enough money for skin
             if userBalNum < priceTextNum[idx]:
@@ -92,9 +110,10 @@ while True:
                 print("Enough funds, continue...")
 
             #Check if float and pattern match with user input
-            print("Reading info about item " +jsonResponse["iteminfo"]["full_item_name"])
+            jsonResponseName = str(jsonResponse["iteminfo"]["full_item_name"])
             jsonResponseFloat = float(jsonResponse["iteminfo"]["floatvalue"])
             jsonResponsePattern = int(jsonResponse["iteminfo"]["paintseed"])
+            print("Reading info about item " +jsonResponseName)
 
             if jsonResponseFloat < float(urlinfo[count][0]):
                 print("Found skin with float better than "+str(urlinfo[count][0]))
@@ -123,18 +142,15 @@ while True:
                 driver.execute_script("arguments[0].click();", closeButton)
 
                 print("Buying item for "+ str(priceTextNum[idx]))
+
                 userBalNum = check_user_balance()
                 print("Current wallet balance is "+ str(userBalNum))
             except:
                 print("Something went wrong, skipping to next skin!")
                 continue
-            
-            #Print information about found skin
-            print("Name: " +jsonResponse["iteminfo"]["full_item_name"])
-            print("Wear: " +jsonResponse["iteminfo"]["wear_name"])
-            print("FloatNumber: " +str(jsonResponse["iteminfo"]["floatvalue"]))
-            print("Pattern: " +str(jsonResponse["iteminfo"]["paintseed"]))
-            print("\n")
+
+            #Save information to file
+            buyLog(jsonResponseName,jsonResponseFloat,jsonResponsePattern,priceTextNum[idx])
             time.sleep(speed)
 
         #Clear information about previous page
@@ -150,7 +166,3 @@ while True:
             print("No next page, going to next URL...")
             count += 1
             break
-
-
-#End session
-driver.quit()
