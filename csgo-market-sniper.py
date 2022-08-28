@@ -1,10 +1,11 @@
-import requests
 import time
+import requests
+import chromedriver_autoinstaller
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import chromedriver_autoinstaller
-
+from re import sub
+from decimal import Decimal
 
 chromedriver_autoinstaller.install()
 
@@ -15,6 +16,13 @@ chrome_options.add_argument('--disable-dev-shm-usage')
 driver = webdriver.Chrome(options=chrome_options)
 
 urls = []
+priceTextNum = []
+
+def check_user_balance():
+    print("Checking user balance...")
+    userBalance = driver.find_element("id","header_wallet_balance")
+    userBalNum = (int(''.join(c for c in userBalance.text if c.isdigit()))/100)
+    return userBalNum
 
 #Login page load
 driver.get("https://steamcommunity.com/login/home/?goto=market%2Flistings%2F730")
@@ -41,40 +49,58 @@ for x in range(len(urls)):
     urlinfo[x][1] = float(input("Input pattern for skin number "+str(x+1)+ " (enter for any): ") or "-1")
     print("\n")
 
-count2 = 0
+count = 0
 
 #Search loop
 while True:
-    if count2 == len(urls):
-        count2 = 0
+    if count == len(urls):
+        count = 0
     print("Reading URL...")
-    driver.get(urls[count2])
-
+    driver.get(urls[count])
+    
     while True:
         btns = driver.find_elements("class name","market_actionmenu_button")
         buyButtons = driver.find_elements("class name","item_market_action_button")
+        prices = driver.find_elements('xpath','//span[@class="market_listing_price market_listing_price_with_fee"]')
+        for price in prices:
+            priceTextNum.append(int(''.join(c for c in price.text if c.isdigit()))/100)
 
         for idx,btn in enumerate(btns):
+            #Check item float and save JSON
             try:  
                 driver.execute_script("arguments[0].click();", btn)
                 popup = driver.find_element("css selector","#market_action_popup_itemactions > a")
                 href = popup.get_attribute('href')
+
+                response = requests.get('https://api.csgofloat.com/?url='+href)
+                response.raise_for_status()
+                jsonResponse = response.json()
             except:
                 continue
 
-            response = requests.get('https://api.csgofloat.com/?url='+href)
-            response.raise_for_status()
-            jsonResponse = response.json()
+            #Check user balance
+            try:
+                userBalNum = check_user_balance()
+            except:
+                print("Cant get user balance. Are you logged in?")
 
+            #Check if user have enough money for skin
+            if userBalNum < priceTextNum[idx]:
+                print("You dont have enough money for this skin, checking next...")
+                continue
+            else:
+                print("Enough funds, continue...")
+
+            #Check if float and pattern match with user input
             print("Reading info about item " +jsonResponse["iteminfo"]["full_item_name"])
             jsonResponseFloat = float(jsonResponse["iteminfo"]["floatvalue"])
             jsonResponsePattern = int(jsonResponse["iteminfo"]["paintseed"])
 
-            if jsonResponseFloat < float(urlinfo[count2][0]):
-                print("Found skin with float better than "+str(urlinfo[count2][0]))
+            if jsonResponseFloat < float(urlinfo[count][0]):
+                print("Found skin with float better than "+str(urlinfo[count][0]))
                 print("Checking pattern now...")
-                if int(urlinfo[count2][1]) == -1 or jsonResponsePattern == int(urlinfo[count2][1]):
-                    print("Found skin with pattern "+str(urlinfo[count2][1]))
+                if int(urlinfo[count][1]) == -1 or jsonResponsePattern == int(urlinfo[count][1]):
+                    print("Found skin with pattern "+str(urlinfo[count][1]))
                 else:
                     print("Your pattern dont match any skin with your float...")
                     continue
@@ -82,10 +108,10 @@ while True:
                 print("Your float dont match skin float...")
                 continue
 
-            #Buy now
+            #Buy now button
             driver.execute_script("arguments[0].click();", buyButtons[idx])
 
-            #Close if not enough money
+            #Execute order
             try:
                 checkBox = driver.find_element("id","market_buynow_dialog_accept_ssa")
                 driver.execute_script("arguments[0].click();", checkBox)
@@ -95,10 +121,12 @@ while True:
 
                 closeButton = driver.find_element("id","market_buynow_dialog_close")
                 driver.execute_script("arguments[0].click();", closeButton)
+
+                print("Buying item for "+ str(priceTextNum[idx]))
+                userBalNum = check_user_balance()
+                print("Current wallet balance is "+ str(userBalNum))
             except:
-                cancelButton = driver.find_element("id","market_buynow_dialog_cancel")
-                driver.execute_script("arguments[0].click();", cancelButton)
-                print("Not enough funds!")
+                print("Something went wrong, skipping to next skin!")
                 continue
             
             #Print information about found skin
@@ -109,6 +137,10 @@ while True:
             print("\n")
             time.sleep(speed)
 
+        #Clear information about previous page
+        priceTextNum.clear()
+
+        #Search for next page
         try:
             print("Checking next page...")
             nextPage = driver.find_element('xpath','//span[@id="searchResults_btn_next" and @class="pagebtn"]')
@@ -116,7 +148,7 @@ while True:
             time.sleep(speed)
         except:
             print("No next page, going to next URL...")
-            count2 += 1
+            count += 1
             break
 
 
