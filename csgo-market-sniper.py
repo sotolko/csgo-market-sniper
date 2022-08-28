@@ -25,8 +25,8 @@ def check_user_balance():
 
     print("Checking user balance...")
     userBalance = driver.find_element("id","header_wallet_balance")
-    userBalNum = (int(''.join(c for c in userBalance.text if c.isdigit()))/100)
-    return userBalNum
+    userBalanceEdit = (''.join(c for c in userBalance.text if c.isdigit()))
+    return userBalanceEdit
 
 def buyLog(itemName,itemFloat,itemPattern,itemPrice):
     """Function that will save informaiton about purchase to logfile"""
@@ -38,14 +38,30 @@ def buyLog(itemName,itemFloat,itemPattern,itemPrice):
     formatter = logging.Formatter('%(asctime)s - %(name)s%(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S%p %Z')
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
-    logger.info("Item name: {} , Float: {} , Pattern: {} , Price: {}".format(itemName,itemFloat,itemPattern,itemPrice))  
+    logger.info("Item name: {} , Float: {} , Pattern: {} , Price: {}".format(itemName,itemFloat,itemPattern,itemPrice))
+
+def checkStickers(json):
+    """Function that will check if skin have stickers"""
+
+    if not 'stickers' in json["iteminfo"] or len(json["iteminfo"]['stickers']) == 0:
+        return False
+    else:
+        return True
+
 
 #Login page load
 driver.get("https://steamcommunity.com/login/home/?goto=market%2Flistings%2F730")
 print("Login into STEAM first!")
 
-#Request time set
-speed = float(input("How much wait time in seconds after each search (enter for default) : ") or "2")
+#Request time set from user
+while True:
+    try:
+        speed = float(input("How much wait time in seconds after each search (enter for default) : ") or "2")
+    except ValueError:
+        print("Wrong input, try again.")
+        continue
+    else:
+        break
 
 #Reading URLs
 with open('skins.txt', 'r', encoding="utf-8") as findvalues:
@@ -61,11 +77,24 @@ urlinfo = [[0 for x in range(3)] for y in range(len(urls))]
 
 #User input for each url
 for x in range(len(urls)):
-    urlinfo[x][0] = float(input("Input float for skin number "+str(x+1)+ " (enter for any): ") or "1")
-    urlinfo[x][1] = float(input("Input pattern for skin number "+str(x+1)+ " (enter for any): ") or "-1")
+    while True:
+        try:
+            urlinfo[x][0] = float(input("Input float for skin number "+str(x+1)+ " (enter for any): ") or "1")
+            urlinfo[x][1] = int(input("Input pattern for skin number "+str(x+1)+ " (enter for any): ") or "-1")
+            urlinfo[x][2] = str(input("Do you want stickers on skin number "+str(x+1)+ "? (yes/no/any): ") or "any")
+            
+            if (urlinfo[x][2] != "yes") and (urlinfo[x][2] != "no") and (urlinfo[x][2] != "any"):
+                raise ValueError
+
+        except ValueError:
+            print("Wrong input, try again.")
+            continue
+        else:
+            break
     print("\n")
 
 count = 0
+#debug = True
 
 #Search loop
 while True:
@@ -96,7 +125,7 @@ while True:
 
             #Check user balance
             try:
-                userBalNum = check_user_balance()
+                userBalNum = float(check_user_balance())/100
             except:
                 print("Cant get user balance. Are you logged in?")
                 driver.quit()
@@ -118,14 +147,31 @@ while True:
             if jsonResponseFloat < float(urlinfo[count][0]):
                 print("Found skin with float better than "+str(urlinfo[count][0]))
                 print("Checking pattern now...")
+
                 if int(urlinfo[count][1]) == -1 or jsonResponsePattern == int(urlinfo[count][1]):
                     print("Found skin with pattern "+str(urlinfo[count][1]))
+
+                    if urlinfo[count][2] == 'yes' and checkStickers(jsonResponse):
+                        print("Found skin with stickers")
+                    elif urlinfo[count][2] == 'no' and not checkStickers(jsonResponse):
+                        print("Found skin without stickers")
+                    elif urlinfo[count][2] == 'any':
+                        print("Found skin")
+                    else:
+                        print("Your preference dont match this skin...")
+                        continue    
+
                 else:
                     print("Your pattern dont match any skin with your float...")
                     continue
             else:
                 print("Your float dont match skin float...")
                 continue
+            
+            #Dont buy anything
+            #if debug == True:
+            #   print("DEBUG: CONTINUE")
+            #    continue
 
             #Buy now button
             driver.execute_script("arguments[0].click();", buyButtons[idx])
@@ -143,7 +189,7 @@ while True:
 
                 print("Buying item for "+ str(priceTextNum[idx]))
 
-                userBalNum = check_user_balance()
+                userBalNum = float(check_user_balance())/100
                 print("Current wallet balance is "+ str(userBalNum))
             except:
                 print("Something went wrong, skipping to next skin!")

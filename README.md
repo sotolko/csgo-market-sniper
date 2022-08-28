@@ -4,12 +4,15 @@
 ***
 This bot will monitor skins of your choice, and then purchase them automatically.
 At the moment it works only with **CHROME BROWSER!**
+This bot will not work with stickers and cases, keep this in mind. *(Maybe I will implement that in the future)*
 
 ## Features
 
 - Skin monitoring
 - Automatic purchase
+- Logging into file after purchase
 - You can choose specific patterns or floats for bot to find
+- Buy only skins with/without stickers
 ***
 ## Installation
 
