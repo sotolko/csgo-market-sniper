@@ -3,7 +3,7 @@
 ![alt text](https://img.shields.io/github/last-commit/sotolko/csgo-market-sniper) ![alt text](https://img.shields.io/github/commit-activity/m/sotolko/csgo-market-sniper) ![alt text](https://img.shields.io/github/languages/top/sotolko/csgo-market-sniper)
 ***
 This bot will monitor skins of your choice, and then purchase them automatically.
-At the moment it works only with **CHROME BROWSER!**
+At the moment it works only with **CHROMIUM BASED BROWSERS!**
 This bot will not work with stickers and cases, keep this in mind. *(Maybe I will implement that in the future)*
 
 ## Features
@@ -13,6 +13,7 @@ This bot will not work with stickers and cases, keep this in mind. *(Maybe I wil
 - Logging into file after purchase
 - You can choose specific patterns or floats for bot to find
 - Buy only skins with/without stickers
+- You can set max price for skin
 ***
 ## Installation
 
