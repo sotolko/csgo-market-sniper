@@ -1,3 +1,4 @@
+import os
 import time
 import logging
 import sys
@@ -5,7 +6,7 @@ import requests
 import chromedriver_autoinstaller
 
 from selenium import webdriver
-from selenium.common import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.chrome.options import Options
 
 chromedriver_autoinstaller.install()
@@ -14,15 +15,16 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 driver = webdriver.Chrome(options=chrome_options)
 
-debug = False
 urls = []
-price_text_num = []
+
+
+def cls():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def check_user_balance():
     """Function that is checking user balance"""
 
-    print("Checking user balance...")
     user_balance = driver.find_element("id", "header_wallet_balance")
     user_balance_edit = (''.join(c for c in user_balance.text if c.isdigit()))
     return user_balance_edit
@@ -42,10 +44,12 @@ def buy_log(item_name, item_float, item_pattern, item_price):
         "Item name: {} , Float: {} , Pattern: {} , Price: {}".format(item_name, item_float, item_pattern, item_price))
 
 
-def check_stickers(json):
+def check_stickers(json, quantity):
     """Function that will check if skin have stickers"""
 
-    if 'stickers' not in json["iteminfo"] or len(json["iteminfo"]['stickers']) == 0:
+    if len(json["iteminfo"]['stickers']) != quantity:
+        return False
+    elif 'stickers' not in json["iteminfo"] or len(json["iteminfo"]['stickers']) == 0:
         return False
     else:
         return True
@@ -69,13 +73,15 @@ def buy_skin(buy_button):
         driver.execute_script("arguments[0].click();", close_button)
 
         print("Purchase executed\n")
+        time.sleep(5)
     except NoSuchElementException:
         print("Something went wrong, skipping to next skin!")
         return
 
 
 def find_next_page():
-    # Search for next page
+    """Function that will find next page and will go there"""
+
     try:
         print("Checking next page...")
         next_page = driver.find_element('xpath', '//span[@id="searchResults_btn_next" and @class="pagebtn"]')
@@ -88,6 +94,8 @@ def find_next_page():
 
 
 def load_purchase_buttons():
+    """Function that will load purchase buttons from page"""
+
     try:
         inspect_button = driver.find_elements("class name", "market_actionmenu_button")
         buy_buttons = driver.find_elements("class name", "item_market_action_button")
@@ -108,26 +116,25 @@ def check_whole_page():
         except NoSuchElementException:
             continue
 
-        for price in prices:
-            price_text_num.append(int(''.join(c for c in price.text if c.isdigit())) / 100)
+        try:
+            price_text_num = []
+            for price in prices:
+                price_text_num.append(int(''.join(c for c in price.text if c.isdigit())) / 100)
+        except (StaleElementReferenceException, ValueError):
+            break
 
         for idx, btn in enumerate(buttons):
-            # Check item float and save JSON
-            try:
-                driver.execute_script("arguments[0].click();", btn)
-                popup = driver.find_element("css selector", "#market_action_popup_itemactions > a")
-                href = popup.get_attribute('href')
+            # Check if max price is reached
+            if not check_max_price(idx, price_text_num):
+                max_price_reached = True
+                break
 
-                response = requests.get('https://api.csgofloat.com/?url=' + href)
-                response.raise_for_status()
-                json_response = response.json()
-            except NoSuchElementException:
+            # Save JSON information
+            try:
+                item_name, item_float, item_pattern, whole_json = save_json_response(btn)
+            except (NoSuchElementException, StaleElementReferenceException):
                 print("Something went wrong, trying next skin...")
                 continue
-            else:
-                json_response_name = str(json_response["iteminfo"]["full_item_name"])
-                json_response_float = float(json_response["iteminfo"]["floatvalue"])
-                json_response_pattern = int(json_response["iteminfo"]["paintseed"])
 
             # Check user balance
             try:
@@ -141,50 +148,67 @@ def check_whole_page():
             if user_bal_num < price_text_num[idx]:
                 print("You dont have enough money for this skin, checking next...")
                 continue
-            else:
-                print("Enough funds, continue...")
 
             # Check if float and pattern match with user input
-            if float(urlinfo[count][3]) >= float(price_text_num[idx]) or float(urlinfo[count][3]) == -1.0:
-
-                if json_response_float < float(urlinfo[count][0]):
-
-                    if int(urlinfo[count][1]) == -1 or json_response_pattern == int(urlinfo[count][1]):
-
-                        if urlinfo[count][2] == 'yes' and check_stickers(json_response):
-                            print("Found skin with stickers")
-                        elif urlinfo[count][2] == 'no' and not check_stickers(json_response):
-                            print("Found skin without stickers")
-                        elif urlinfo[count][2] == 'any':
-                            print("Found skin")
-                        else:
-                            print("Your preference dont match this skin...")
-                            continue
-
-                    else:
-                        print("Your pattern dont match this skin...")
-                        continue
-                else:
-                    print("Your float dont match this skin...")
-                    continue
-            else:
-                print("Max price reached!")
-                max_price_reached = True
-                break
+            if check_item_parameters(item_float, item_pattern, whole_json) is False:
+                continue
 
             # Buy skin
             buy_skin(buy_now[idx])
 
             # Save information to file
-            buy_log(json_response_name, json_response_float, json_response_pattern, price_text_num[idx])
-            time.sleep(speed)
-
-        # Clear information about previous page
-        price_text_num.clear()
+            buy_log(item_name, item_float, item_pattern, price_text_num[idx])
 
         # Search for next page
-        if not find_next_page() or max_price_reached or debug:
+        if not find_next_page() or max_price_reached:
             break
+
+
+def save_json_response(button):
+    """Function that will save JSON into variables"""
+
+    driver.execute_script("arguments[0].click();", button)
+    popup = driver.find_element("css selector", "#market_action_popup_itemactions > a")
+    href = popup.get_attribute('href')
+
+    response = requests.get('https://api.csgofloat.com/?url=' + href)
+    response.raise_for_status()
+    json_response = response.json()
+    json_response_name = str(json_response["iteminfo"]["full_item_name"])
+    json_response_float = float(json_response["iteminfo"]["floatvalue"])
+    json_response_pattern = int(json_response["iteminfo"]["paintseed"])
+    return json_response_name, json_response_float, json_response_pattern, json_response
+
+
+def check_item_parameters(item_float, item_pattern, whole):
+    """Function that will compare user set parameters with skin"""
+    match = False
+
+    if item_float > float(url_info[count][0]):
+        return False
+
+    if item_pattern != -1:
+        for pattern in url_info[count][1]:
+            if int(pattern) != -1 and int(pattern) != item_pattern:
+                continue
+            else:
+                match = True
+
+        if not match:
+            return False
+
+    if url_info[count][2] != -1:
+        if not check_stickers(whole, url_info[count][2]):
+            return False
+
+    return True
+
+
+def check_max_price(order, price):
+    if float(url_info[count][3]) >= float(price[order]) or float(url_info[count][3]) == -1.0:
+        return True
+
+    return False
 
 
 # Login page load
@@ -216,18 +240,26 @@ except FileNotFoundError:
     sys.exit()
 
 # Make default array for url information
-urlinfo = [[0 for x in range(4)] for y in range(len(urls))]
+url_info = [[0 for x in range(4)] for y in range(len(urls))]
 
 # User input for each url
 for x in range(len(urls)):
     while True:
         try:
-            urlinfo[x][0] = float(input("Input float for skin No. " + str(x + 1) + " (enter for any): ") or "1")
-            urlinfo[x][1] = int(input("Input pattern for skin No. " + str(x + 1) + " (enter for any): ") or "-1")
-            urlinfo[x][2] = str(input("Do you want stickers on skin No. " + str(x + 1) + "? (yes/no/any): ") or "any")
-            urlinfo[x][3] = float(input("Input max price for skin No. " + str(x + 1) + "? (enter for any): ") or "-1")
+            url_info[x][0] = float(input("Input float for skin No. " + str(x + 1) + " (0 to 1/enter for any): ") or "1")
+            if url_info[x][0] > 1 or url_info[x][0] < 0:
+                raise ValueError
 
-            if (urlinfo[x][2] != "yes") and (urlinfo[x][2] != "no") and (urlinfo[x][2] != "any"):
+            url_info[x][1] = list(map(int, input("Input pattern(s) for skin No. " + str(x + 1) + " (enter for any): ").split()))
+            if len(url_info[x][1]) <= 0:
+                url_info[x][1].append(-1)
+
+            url_info[x][2] = int(input("How many stickers on skin No. " + str(x + 1) + " (0 to 4/enter for any): ") or "-1")
+            if url_info[x][2] > 4 or url_info[x][2] < -1:
+                raise ValueError
+
+            url_info[x][3] = float(input("Input max price for skin No. " + str(x + 1) + "? (enter for any): ") or "-1")
+            if url_info[x][3] < -1:
                 raise ValueError
 
         except ValueError:
@@ -243,6 +275,8 @@ count = 0
 while True:
     if count == len(urls):
         count = 0
-    print("Reading URL...")
+    print("Reading URL No. {}...".format(count))
     driver.get(urls[count])
     check_whole_page()
+    count += 1
+    cls()
