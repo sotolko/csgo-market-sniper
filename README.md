@@ -14,13 +14,14 @@ This bot will not work with stickers and cases, keep this in mind. *(Maybe I wil
 - You can choose specific patterns or floats for bot to find
 - Buy only skins with/without stickers
 - You can set max price for skin
+- You can set max pages to look for
 ***
 ## Installation
 
 ![alt text](https://i.imgur.com/GGd8EiT.png)
 
 ```
-pip install selenium & pip install requests & pip install chromedriver-autoinstaller
+pip install -r /path/to/requirements.txt
 ```
 ***
 ## Usage
@@ -39,4 +40,9 @@ Chrome window with steam login page will open. **LOGIN INTO STEAM FIRST!**
 ## Example
 I want to buy **USP-S | Orion (Minimal Wear)** with float better than **0.13** and with pattern **763**
 ![alt text](https://i.imgur.com/WgeVfLA.gif)
+***
+## Planned
+
+- Config file, so you don´t need to specify every skin setting every time you start bot.
+***
 
