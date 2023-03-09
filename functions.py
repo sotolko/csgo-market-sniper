@@ -47,7 +47,7 @@ def check_user_balance():
         driver.quit()
 
 
-def buy_log(item_name, item_float, item_pattern, item_price, buycount):
+def buy_log(item_name, item_float, item_pattern, item_price, count):
     """Function that will save information about purchase to logfile"""
     logger = logging.getLogger('BUYLOGGER')
     logger.setLevel(logging.INFO)
@@ -59,12 +59,13 @@ def buy_log(item_name, item_float, item_pattern, item_price, buycount):
     logger.info(
         f"Item name: {item_name} , Float: {item_float} , Pattern: {item_pattern} , Price: {item_price}"
     )
-    buycount += 1
+    count += 1
+    cls()
 
 
 def check_stickers(json, quantity):
     """Function that will check if skin have stickers"""
-    if len(json["iteminfo"]['stickers']) != quantity:
+    if len(json["iteminfo"]['stickers']) != int(quantity):
         return False
     elif 'stickers' not in json["iteminfo"] or len(json["iteminfo"]['stickers']) == 0:
         return False
@@ -181,10 +182,13 @@ def check_whole_page(count, url_info):
             # Save information to file
             buy_log(item_name, item_float, item_pattern, price_text_num[idx], buy_count)
 
-        if page >= url_info[0][4]:
+        if url_info[count][4] is not None:
+            if page >= url_info[count][4] or int(page_count()) == url_info[count][4]:
+                break
+        elif page >= int(page_count()):
             break
-
-        find_next_page()
+        else:
+            find_next_page()
 
 
 def save_json_response(button):
@@ -214,20 +218,19 @@ def check_item_parameters(item_float, item_pattern, whole, count, url_info):
     """Function that will compare user set parameters with skin"""
     match = False
 
-    if item_float > float(url_info[count][0]):
-        return False
+    if url_info[count][0] is not None:
+        if item_float > float(url_info[count][0]):
+            return False
 
-    if item_pattern != -1:
+    if url_info[count][1] is not None:
         for pattern in url_info[count][1]:
-            if int(pattern) != -1 and int(pattern) != item_pattern:
-                continue
-            else:
+            if int(pattern) == item_pattern:
                 match = True
-
+                break
         if not match:
             return False
 
-    if url_info[count][2] != -1:
+    if url_info[count][2] is not None:
         if not check_stickers(whole, url_info[count][2]):
             return False
 
@@ -235,101 +238,11 @@ def check_item_parameters(item_float, item_pattern, whole, count, url_info):
 
 
 def check_max_price(order, price, count, url_info):
-    if float(url_info[count][3]) >= float(price[order]) or float(url_info[count][3]) == -1.0:
-        return True
+    if url_info[count][3] is not None:
+        if float(url_info[count][3]) <= float(price[order]):
+            return False
 
-    return False
-
-
-# Reading URLs
-class OpenUrls:
-    def __init__(self, filename):
-        self.counter = 0
-        self.status = False
-        self.filename = filename
-        self.urls = []
-
-        try:
-            with open(filename, 'r', encoding="utf-8") as find_values:
-                for line in find_values:
-                    line = line.rstrip()
-                    if line.startswith('https://steamcommunity.com/market/listings/730/'):
-                        self.urls.append(line)
-                        self.counter += 1
-                    else:
-                        continue
-
-            self.status = True
-        except FileNotFoundError:
-            print("Create skins.txt file and populate it with URLs!")
-            sys.stderr.write("skins.txt not found!")
-            driver.quit()
-
-
-# User input for each url
-def take_user_input(url_info, counter):
-    # Request time set from user
-    for x in range(counter):
-        while True:
-            try:
-                url_info[x][0] = float(input(
-                    "Input float for skin No. " + str(x + 1) + " (0 to 1/enter for any): ") or "1"
-                    )
-                if url_info[x][0] > 1 or url_info[x][0] < 0:
-                    raise ValueError
-
-                url_info[x][1] = list(map(int, input(
-                    "Input pattern(s) for skin No. " + str(x + 1) + " (enter for any): ").split())
-                    )
-                if len(url_info[x][1]) <= 0:
-                    url_info[x][1].append(-1)
-
-                url_info[x][2] = int(input(
-                    "How many stickers on skin No. " + str(x + 1) + " (0 to 4/enter for any): ") or "-1"
-                    )
-                if url_info[x][2] > 4 or url_info[x][2] < -1:
-                    raise ValueError
-
-                url_info[x][3] = float(input(
-                    "Input max price for skin No. " + str(x + 1) + " (enter for any): ") or "-1"
-                    )
-                if url_info[x][3] < -1:
-                    raise ValueError
-
-                url_info[x][4] = int(input(
-                    "Input max pages to look for " + str(x + 1) + " (enter for any): ") or "-1"
-                                       )
-                if url_info[x][4] < -1:
-                    raise ValueError
-
-            except ValueError:
-                print("Wrong input, try again.")
-                continue
-            else:
-                break
-        print("\n")
-
-
-def login_function():
-    loginform = driver.find_elements(*PageLocators.LOGIN_FORM)
-    login = driver.find_element(*PageLocators.LOGIN_BUTTON)
-
-    loginform[0].send_keys("XXXX")
-    loginform[1].send_keys("XXXX")
-    try:
-        WebDriverWait(driver, 10).until(ec.presence_of_element_located(PageLocators.LOGIN_BUTTON))
-    except TimeoutException:
-        driver.quit()
-        return False
-
-    login.click()
-
-    try:
-        WebDriverWait(driver, 120).until(ec.title_is("Steam Community :: Steam Community Market"))
-        return True
-    except TimeoutException:
-        driver.quit()
-        return False
+    return True
 
 
 def page_count():

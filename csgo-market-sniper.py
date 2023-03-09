@@ -1,28 +1,32 @@
 from functions import *
-
+from config import load_config
 
 # Login page load
 cls()
 driver.get("https://steamcommunity.com/login/home/?goto=market%2Flistings%2F730")
 
-# Make default array for url information
-urls = OpenUrls("skins.txt")
-url_info = [[0 for x in range(5)] for y in range(urls.counter)]
+#Load config
+url_info = load_config()
+if url_info == None:
+    driver.quit()
+    sys.exit()
+    
 count = 0
 
-take_user_input(url_info, urls.counter)
+input("Press enter to start if you are logged in and ready!")
 
 # Search loop
 cls()
 print("\n\n")
 while True:
-    if urls.counter < 1:
-        print("Populate skins.txt file and rerun. Exiting...")
+    if len(url_info) < 1:
+        print("Populate config.yaml file and rerun. Exiting...")
         driver.quit()
         sys.exit()
 
-    if count == urls.counter:
+    if count == len(url_info):
         count = 0
-    driver.get(urls.urls[count])
+
+    driver.get(url_info[count][5])
     check_whole_page(count, url_info)
     count += 1

@@ -1,10 +1,10 @@
 # CS:GO Market sniper
 ***
-![alt text](https://img.shields.io/github/last-commit/sotolko/csgo-market-sniper) ![alt text](https://img.shields.io/github/commit-activity/m/sotolko/csgo-market-sniper) ![alt text](https://img.shields.io/github/languages/top/sotolko/csgo-market-sniper)
+![alt text](https://img.shields.io/github/last-commit/sotolko/csgo-market-sniper?style=for-the-badge) ![alt text](https://img.shields.io/github/commit-activity/m/sotolko/csgo-market-sniper?style=for-the-badge) ![alt text](https://img.shields.io/github/languages/top/sotolko/csgo-market-sniper?style=for-the-badge)
 ***
 This bot will monitor skins of your choice, and then purchase them automatically.
 At the moment it works only with **CHROMIUM BASED BROWSERS!**
-This bot will not work with stickers and cases, keep this in mind. *(Maybe I will implement that in the future)*
+This bot will not work with stickers and cases, keep this in mind. *(You can check what is planned at the bottom of README)*. Also consider that I'm working on this project alone, so there's a chance that something won't work as it should. If you find a bug, open a ticket in the issue and I'll try to fix it.
 
 ## Features
 
@@ -16,33 +16,44 @@ This bot will not work with stickers and cases, keep this in mind. *(Maybe I wil
 - You can set max price for skin
 - You can set max pages to look for
 ***
-## Installation
+## Dependencies
 
-![alt text](https://i.imgur.com/GGd8EiT.png)
+Selenium, PyYAML, Requests, chromedriver-autoinstaller
 
 ```
 pip install -r /path/to/requirements.txt
 ```
 ***
 ## Usage
-Open skins.txt file ,and put skin URLs into this file like below. Remember to put every URL to new line.
-![alt text](https://i.imgur.com/D0YzKmL.png)
+Open config.yaml file ,and fill this file based on example provided.
+
+```yaml
+# Example configuration file for program
+
+skins:
+  - url: https://steamcommunity.com/market/listings/730/MP7%20%7C%20Army%20Recon%20%28Field-Tested%29
+    float: # Leave empty for ANY
+    price: 100 
+    number_of_stickers: # Leave empty for ANY
+    pages: 2
+    pattern: 502, 800
+  - url: https://steamcommunity.com/market/listings/730/UMP-45%20%7C%20Urban%20DDPAT%20%28Factory%20New%29
+    float: 
+    price: 
+    number_of_stickers:
+    pages: 2
+    pattern: 123
+```
 
 Then, start the program
-
-![alt text](https://i.imgur.com/NXjOBnz.png)
-
-```
+```bash
 python csgo-market-sniper.py
 ```
 Chrome window with steam login page will open. **LOGIN INTO STEAM FIRST!**
 ***
-## Example
-I want to buy **USP-S | Orion (Minimal Wear)** with float better than **0.13** and with pattern **763**
-![alt text](https://i.imgur.com/WgeVfLA.gif)
-***
 ## Planned
 
-- Config file, so you don´t need to specify every skin setting every time you start bot.
+- Setting to buy higher than set float skin, not lower only.
+- Buy stickers, cases, agents etc.
 ***
 
