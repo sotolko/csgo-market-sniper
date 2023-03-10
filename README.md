@@ -25,7 +25,7 @@ pip install -r /path/to/requirements.txt
 ```
 ***
 ## Usage
-Open config.yaml file ,and fill this file based on example provided.
+Open settinngs/config.yaml file ,and fill this file based on example provided.
 
 ```yaml
 # Example configuration file for program

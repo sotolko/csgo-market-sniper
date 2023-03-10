@@ -223,12 +223,13 @@ def check_item_parameters(item_float, item_pattern, whole, count, url_info):
             return False
 
     if url_info[count][1] is not None:
-        for pattern in url_info[count][1]:
-            if int(pattern) == item_pattern:
-                match = True
-                break
-        if not match:
-            return False
+        if type(url_info[count][1]) is not int:
+            for pattern in url_info[count][1]:
+                if int(pattern) == item_pattern:
+                    match = True
+                    break
+            if not match:
+                return False
 
     if url_info[count][2] is not None:
         if not check_stickers(whole, url_info[count][2]):

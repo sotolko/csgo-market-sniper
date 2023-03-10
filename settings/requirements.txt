@@ -2,3 +2,6 @@ selenium
 requests
 chromedriver-autoinstaller
 pyyaml
+html5lib
+bs4
+fake_headers

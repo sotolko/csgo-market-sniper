@@ -4,12 +4,12 @@ skins:
   - url: https://steamcommunity.com/market/listings/730/MP7%20%7C%20Army%20Recon%20%28Field-Tested%29
     float: 0.2
     price: 100 
-    number_of_stickers: # Leave empty for ANY
-    pages: 2
+    number_of_stickers: 4
+    pages:
     pattern: 502, 947
   - url: https://steamcommunity.com/market/listings/730/UMP-45%20%7C%20Urban%20DDPAT%20%28Factory%20New%29
-    float: 
-    price: 
-    number_of_stickers:
-    pages: 2
+    float: 0.1
+    price: 100
+    number_of_stickers: 4
+    pages:
     pattern: 123

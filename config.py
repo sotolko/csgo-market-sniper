@@ -3,7 +3,7 @@ import yaml
 def load_config():
     print("Loading config file...")
 
-    with open('config.yaml', 'r') as f:
+    with open('settings/config.yaml', 'r') as f:
         config = yaml.safe_load(f)
 
     url_info = [[None]*6 for _ in range(len(config['skins']))]
@@ -21,6 +21,10 @@ def load_config():
         if url_info[idx][5] == None:
             print("There is skin that have URL empty in config.yaml.\nExiting...")
             return None
+        
+        if url_info[idx][1] is not None:
+            if type(url_info[idx][1]) == str:
+                url_info[idx][1] = url_info[idx][1].split(', ')
 
     print(f"Loaded {len(url_info)} skins!")
     return url_info
