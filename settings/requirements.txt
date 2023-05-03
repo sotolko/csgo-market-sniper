@@ -1,5 +1,4 @@
 selenium
-requests
 chromedriver-autoinstaller
 pyyaml
 html5lib
