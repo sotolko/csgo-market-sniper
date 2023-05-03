@@ -19,7 +19,7 @@ chromedriver_autoinstaller.install()
 
 # Initialize the webdriver
 chrome_options = Options()
-chrome_options.add_extension('path_to_your_crx_file.crx') # Change this to the path of the CSGOFloat extension
+chrome_options.add_extension('S:\Downloads\extension_3_0_3_0.crx') # Change this to the path of the CSGOFloat extension
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
@@ -57,7 +57,10 @@ def check_whole_page(count, config):
     pages = int(page_count(config[count][3]))
 
     # Sort items by float
-    find_and_click_sort_button()
+    try:
+        find_and_click_sort_button()
+    except:
+        pass
 
     # Iterate through pages
     for page in range(1, pages + 1):
