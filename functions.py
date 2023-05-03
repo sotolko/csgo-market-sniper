@@ -268,7 +268,6 @@ def progress_bar(progress, total, urlcount, buycount, page):
     Returns:
     None
     """
-
     # Calculate the percentage of completion
     percent = 100 * (progress / float(total))
     # Create a progress bar using unicode characters
@@ -277,8 +276,14 @@ def progress_bar(progress, total, urlcount, buycount, page):
     up = "\x1B[3A"
     clr = "\x1B[0K"
 
+    # Generate the string of information
+    info_str = f"Skin: {urlcount} | Page: {page} | Item: {progress} | Total items: {total} | Items bought: {buycount} | Balance: {check_user_balance()}"
+
+    # Calculate the required padding to center the information string
+    padding = (len(bar) - len(info_str)) // 2
+
     # Print the progress bar, along with other information
-    print(f"{up}|        Skin: {urlcount} | Page: {page} | Item: {progress} | Total items: {total} | Items bought: {buycount} | Balance: {str(check_user_balance())}            |{clr}\n|{bar}| {percent:.2f}%{clr}\n")
+    print(f"{up}|{' ' * padding}{info_str}{' ' * padding}|{clr}\n|{bar}| {percent:.2f}%{clr}\n")
 
 def check_user_balance():
     """
