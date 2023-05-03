@@ -75,8 +75,8 @@ def check_whole_page(count, config):
 
             # Get user balance
             try:
-                user_balance = float(check_user_balance()) / 100
-            except ValueError:
+                user_balance = check_user_balance()
+            except Exception:
                 sys.stderr.write("Can't get user balance. Are you logged in?")
                 driver.quit()
                 sys.exit()
@@ -278,7 +278,7 @@ def progress_bar(progress, total, urlcount, buycount, page):
     clr = "\x1B[0K"
 
     # Print the progress bar, along with other information
-    print(f"{up}| Skin: {urlcount} — Page: {page} — Item: {progress} — Total items: {total} — Items bought: {buycount} — Balance: {str(float(check_user_balance()) / 100)} |{clr}\n\n|{bar}| {percent:.2f}%{clr}\n")
+    print(f"{up}|        Skin: {urlcount} | Page: {page} | Item: {progress} | Total items: {total} | Items bought: {buycount} | Balance: {str(check_user_balance())}            |{clr}\n|{bar}| {percent:.2f}%{clr}\n")
 
 def check_user_balance():
     """
