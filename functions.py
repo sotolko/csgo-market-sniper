@@ -69,7 +69,7 @@ def check_whole_page(count, config):
             break
 
         # Iterate through items on the current page
-        for idx, _ in enumerate(buy_buttons):
+        for idx, _ in enumerate(prices):
             skin_count += 1
             progress_bar(skin_count, items, count + 1, buy_count, page)
 
@@ -277,13 +277,15 @@ def progress_bar(progress, total, urlcount, buycount, page):
     clr = "\x1B[0K"
 
     # Generate the string of information
-    info_str = f"Skin: {urlcount} | Page: {page} | Item: {progress} | Total items: {total} | Items bought: {buycount} | Balance: {check_user_balance()}"
+    info_str = f"Skin: {urlcount} | Page: {page} | Item: {progress} | Total items: {total} | Items bought: {buycount} | Balance: {str(check_user_balance())}"
 
     # Calculate the required padding to center the information string
-    padding = (len(bar) - len(info_str)) // 2
+    padding_left = (len(bar) - len(info_str)) // 2
+    # Adjust the right padding if the length of the information string is an odd number
+    padding_right = padding_left if len(info_str) % 2 == 0 else padding_left + 1
 
     # Print the progress bar, along with other information
-    print(f"{up}|{' ' * padding}{info_str}{' ' * padding}|{clr}\n|{bar}| {percent:.2f}%{clr}\n")
+    print(f"{up}|{' ' * padding_left}{info_str}{' ' * padding_right}|{clr}\n|{bar}| {percent:.2f}%{clr}\n")
 
 def check_user_balance():
     """
