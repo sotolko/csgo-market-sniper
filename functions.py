@@ -225,7 +225,7 @@ def load_purchase_buttons():
             float_value = float(csgofloat_item_row_content.split("\n")[0].split(":")[1].strip())
             floats.append(float_value)
 
-            pattern_value = float(csgofloat_item_row_content.split("\n")[1].split(":")[1].strip())
+            pattern_value = int(csgofloat_item_row_content.split("\n")[1].split(":")[1].strip())
             patterns.append(pattern_value)
 
         # Return all lists
@@ -366,7 +366,7 @@ def check_item_parameters(item_float, item_pattern, config_float, config_pattern
         
     # If a list of acceptable patterns is specified in the configuration, check if the item's pattern is in this list
     if config_pattern is not None:
-        if item_pattern not in config_pattern:
+        if str(item_pattern) not in config_pattern:
             return False
 
     # If the item's float and pattern meet the criteria, the item is eligible for purchase
@@ -422,15 +422,19 @@ def buy_log(item_name, item_float, item_price):
     # Set up a logger with the name 'BUY' and set the logging level to INFO
     logger = logging.getLogger('BUY')
     logger.setLevel(logging.INFO)
-    # Create a file handler to write log messages to a file
-    file_handler = logging.FileHandler("buy.log", mode='a')
-    file_handler.setLevel(logging.INFO)
-    # Specify the format of the log messages
-    formatter = logging.Formatter('[%(asctime)s] %(name)s > %(message)s', datefmt='%m/%d/%Y %I:%M:%S%p')
-    # Add the formatter to the file handler
-    file_handler.setFormatter(formatter)
-    # Add the file handler to the logger
-    logger.addHandler(file_handler)
+    
+    # Check if logger already has handlers
+    if not logger.handlers:
+        # Create a file handler to write log messages to a file
+        file_handler = logging.FileHandler("buy.log", mode='a')
+        file_handler.setLevel(logging.INFO)
+        # Specify the format of the log messages
+        formatter = logging.Formatter('[%(asctime)s] %(name)s > %(message)s', datefmt='%m/%d/%Y %I:%M:%S%p')
+        # Add the formatter to the file handler
+        file_handler.setFormatter(formatter)
+        # Add the file handler to the logger
+        logger.addHandler(file_handler)
+    
     # Log the information about the purchase
     logger.info(f"Item: {item_name}, Float: {item_float}, Price: {item_price}")
 
