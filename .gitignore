@@ -1,6 +1,4 @@
-testcase/*
-skins.txt
-test.py
+resources/*
 __pycache__
 .idea
 buy.log

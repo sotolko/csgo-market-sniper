@@ -1,6 +1,5 @@
 selenium
-chromedriver-autoinstaller
+selenium-wire
 pyyaml
-html5lib
-bs4
-fake_headers
+requests
+colorama

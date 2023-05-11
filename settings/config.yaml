@@ -1,11 +1,8 @@
+proxy_url: # Replace this with the appropriate proxy URL or leave empty format: username:password@ip:port
 skins:
-  - url: https://steamcommunity.com/market/listings/730/MP7%20%7C%20Army%20Recon%20%28Field-Tested%29
-    float: # Leave empty for ANY
-    price: 100
-    pages: 2
-    pattern: 502, 800
-  - url: https://steamcommunity.com/market/listings/730/UMP-45%20%7C%20Urban%20DDPAT%20%28Factory%20New%29
-    float: 
-    price: 
-    pages: 2
-    pattern: 123
+  - url: https://steamcommunity.com/market/listings/730/StatTrak%E2%84%A2%20SG%20553%20%7C%20Cyberforce%20%28Field-Tested%29 # Set to the URL of the item you want to purchase
+    float: 0.09 # Set to a float value eg. 0.09 or leave empty to not purchase by float
+    price: 0.45 # Set to a price in decimal format eg. 0.45 or leave empty to not purchase by price
+    pages: 5 # Set to a number of pages eg. 5 or leave empty to purchase from all available pages
+    pattern: # Set to a list of patterns eg. 1, 2, 3 or leave empty to not purchase by pattern
+    sort_by_float: asc # Set to asc (low to high) or desc (high to low) to sort by float value or leave empty to not sort by float

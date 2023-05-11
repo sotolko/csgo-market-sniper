@@ -1,47 +1,81 @@
-from functions import *
+import sys
+
+import urllib3
+from selenium.common.exceptions import NoSuchWindowException
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.ui import WebDriverWait
+
 from config import load_config
+from driver import init_driver
+from functions import cls, process_skin_marketplace
+from locators import PageLocators
 
-# Clear the terminal
-cls()
 
-# Load the Steam login page
-driver.get("https://steamcommunity.com/login/home/?goto=market%2Flistings%2F730")
+def main():
+    """
+    The main function to control the flow of the program.
+    It loads the configuration settings, initializes the webdriver, and enters the main loop for searching skins to buy.
+    """
+    # Load the configuration settings from the config file
+    skins, proxy_url = load_config()
 
-# Load the configuration settings
-config = load_config()
+    # Check if the configuration was loaded successfully
+    if skins is None:
+        print("No valid skins configuration found. Please check your settings.\nExiting...")
+        return
 
-# If the config can't be loaded, quit the driver and exit the program
-if config is None:
-    driver.quit()
-    sys.exit()
+    # Initialize the webdriver for browsing the Steam Community Market
+    driver = init_driver(proxy_url)
 
-# Initialize count variable
-count = 0
+    # Check if the driver was initialized successfully
+    if driver is None:
+        print("Failed to initialize the webdriver. Please check your settings and internet connection.\nExiting...")
+        return
 
-# Prompt the user to start the program after they've logged in
-input("Press enter to start if you are logged in and ready!")
+    try:
+        # Load the Steam login page
+        driver.get(
+            "https://steamcommunity.com/login/home/?goto=market%2Flistings%2F730"
+        )
 
-# Clear the terminal and print some new lines
-cls()
-print("\n\n")
+        print("Steam login page loaded. Please log in to your account...")
 
-# Main loop for searching skins to buy
-while True:
-    # If there are no items in the config, instruct the user to populate it and then exit the program
-    if len(config) < 1:
-        print("Populate config.yaml file and rerun. Exiting...")
+        # Wait until the logout button appears (indicating that the user has successfully logged in)
+        WebDriverWait(driver, float("inf")).until(
+            ec.presence_of_element_located(PageLocators.LOGOUT_BUTTON)
+        )
+        print("Login successful! Starting the bot...")
+
+        # Load the first skin's page
+        driver.get(skins[0].get('url'))
+
+        # Clear the console
+        cls()
+
+        # Main loop for searching skins to buy
+        while True:
+            # Initialize the current skin being searched
+            skin_index = 0
+
+            # Loop over all the skins in the configuration
+            for skin in skins:
+                # Process the current skin's marketplace
+                process_skin_marketplace(driver, skin, skin_index)
+                skin_index += 1
+
+    # Catch exceptions to provide informative messages and clean up before exiting
+    except NoSuchWindowException:
+        print("The browser window was closed by the user.\nExiting...")
+        sys.exit(0)
+    except KeyboardInterrupt or urllib3.exceptions.ProtocolError or urllib3.exceptions.MaxRetryError or urllib3.exceptions.ProtocolError:
+        print("Bot interrupted.\nExiting...")
+        sys.exit(0)
+    finally:
+        # Close the browser window
         driver.quit()
-        sys.exit()
+        print("Browser closed.\nGoodbye!")
 
-    # If the count equals the length of the config, reset the count to 0
-    if count == len(config):
-        count = 0
 
-    # Load the page for the current skin in the config
-    driver.get(config[count][4])
-
-    # Check the whole page for possible purchases
-    check_whole_page(count, config)
-
-    # Increment the count
-    count += 1
+# Run the program
+if __name__ == "__main__":
+    main()
